@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LG - Logo Generator</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #121212; color: #eee; }
+    input, button { padding: 10px; margin: 10px 0; width: 100%; font-size: 1rem; }
+    button { background-color: #007acc; color: white; border: none; cursor: pointer; }
+    button:disabled { background-color: #555; cursor: not-allowed; }
+    img { max-width: 100%; margin-top: 20px; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <h1>LG - Генератор логотипов</h1>
+  <input type="text" id="prompt" placeholder="Опиши логотип (на русском или английском)" />
+  <button id="generateBtn">Создать логотип</button>
+  <div id="result"></div>
+
+  <script>
+    const btn = document.getElementById('generateBtn');
+    const promptInput = document.getElementById('prompt');
+    const resultDiv = document.getElementById('result');
+
+    btn.onclick = async () => {
+      const prompt = promptInput.value.trim();
+      if (!prompt) {
+        alert('Пожалуйста, введите описание логотипа');
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = 'Генерируем...';
+      resultDiv.innerHTML = '';
+
+      try {
+        const res = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt })
+        });
+
+        if (!res.ok) throw new Error('Ошибка сети');
+
+        const data = await res.json();
+
+        if (data.error) {
+          resultDiv.textContent = 'Ошибка сервера: ' + data.error;
+          return;
+        }
+
+        // Репликация запускает асинхронный процесс генерации,
+        // здесь для простоты сразу выводим URL из результата,
+        // в реальном мире нужно дожидаться готовности.
+        if (data.output && data.output.length > 0) {
+          resultDiv.innerHTML = `<img src="${data.output[0]}" alt="Сгенерированный логотип" />`;
+        } else {
+          resultDiv.textContent = 'Логотип не сгенерирован';
+        }
+
+      } catch (e) {
+        resultDiv.textContent = 'Ошибка: ' + e.message;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Создать логотип';
+      }
+    };
+  </script>
+</body>
+</html>
